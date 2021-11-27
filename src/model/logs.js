@@ -12,16 +12,16 @@ const logsSchema = new mongoose.Schema({
 const Logs = mongoose.model("logs",logsSchema);
 
 //save shortenrul object : {username}
-const createAndSaveLogs = async (exercise, done) => {  
+const createAndSaveLogs = async (exercise, done) => {
   return await Logs.create(exercise);
-  
+
 };
 
 //get one document
 //id is the document _id
 const findLog = async(id, done) => {
-  return await Logs.findOne({ _id:id }).exec();  
-}  
+  return await Logs.findOne({ _id:id }).exec();
+}
 
 //get all exercises for a specific user(need id) from logs
 const findLogsByUser = async (user, done) => {
@@ -30,18 +30,11 @@ const findLogsByUser = async (user, done) => {
 
 const findLogs = async (toSearch, limit, done) => {
   if (toSearch===null|toSearch===''|toSearch===undefined) {
-    if (limit!==undefined) return await Logs.find({ user:/\w*/g },'-created -__v').limit(limit).exec();
-    else return await Logs.find({ user:/\w*/g },'-created -__v').exec();
-  }  
-  
-  if (limit!==undefined){
-    console.log('toSearch:',toSearch,'limit:',limit)
-    return await Logs.find(toSearch,'-created -__v').limit(limit).exec();
-  } 
-  else {
-    console.log('toSearch:',toSearch,'limit:',limit)
-    return await Logs.find(toSearch,'-created -__v').exec();
+   return await Logs.find({ user:/\w*/g },'-created -__v').limit(limit).exec();
   }
+
+  else return await Logs.find(toSearch,'-created -__v').limit(limit).exec();
+
 }
 
 
@@ -65,7 +58,7 @@ const deleteLog = async (id, done) => {
 }
 
 //delete everything
-const deleteAllLogs = async() => {  
+const deleteAllLogs = async() => {
   await Logs.collection.drop(done);
 }
 
