@@ -5,7 +5,7 @@ require('dotenv').config()
 const validator = require('validator')
 const bodyParser = require('body-parser')
 const { format, parseISO } = require('date-fns')
-const { connecter } = require('./src/database')
+const { connector } = require('./src/database')
 
 const  {
   newID,
@@ -71,22 +71,16 @@ const newUser = async (req,res,next) => {
     const id = newID();
     createAndSaveUser({username:username,_id:id},done)
     res.send({ username : `${username}`, _id:`${id}`});
- } else {
-   res.send('')
- }
+ } else return res.status(400).send('400 Bad Request');
 
 }
 
 const newLog = async (req,res,next) => {
   const userid = req.params._id;
-  if (!validator.isAlphanumeric(userid)){
-    res.send('')
-  }
+  if (!validator.isAlphanumeric(userid)) return res.status(400).send('400 Bad Request');
   findUser(userid)
   .then(user=> {
-    if (user===null){
-      res.send('')
-    }
+    if (user===null) return res.status(400).send('400 Bad Request');
     else {
 
       const desc = req.body.description;
@@ -121,13 +115,13 @@ const userLogs = async (req,res,next) => {
 
   const toSearch = Object.keys(searchDate).length===0?{user:userid}:{user:userid,date:searchDate};
 
-  if (!validator.isAlphanumeric(userid) && isNaN(_limit)) res.send('');
+  if (!validator.isAlphanumeric(userid) && isNaN(_limit)) return res.status(400).send('400 Bad Request');
   else {
       findUser(userid)
       .then(user => {
 
           if (user===null){
-            res.send('');
+             return res.status(400).send('400 Bad Request');
           }
           else {
               let cleanuser = {username: user.username, count: 0, _id:user.id, log: []}
