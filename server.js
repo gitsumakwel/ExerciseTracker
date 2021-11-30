@@ -5,7 +5,7 @@ require('dotenv').config()
 const validator = require('validator')
 const bodyParser = require('body-parser')
 const { format, parseISO } = require('date-fns')
-const { connector } = require('./src/database')
+const { connecter } = require('./src/database')
 
 const  {
   newID,
@@ -56,6 +56,8 @@ const doneresult = (error, result) => {
   return result;
 }
 
+//GET /api/users
+//display all users
 const allUsers = async (req,res,next) => {
   findUsers(null,done)
   .then(result => {
@@ -63,24 +65,43 @@ const allUsers = async (req,res,next) => {
   });
 }
 
+//POST /api/users
+//this function will add new user
 const newUser = async (req,res,next) => {
   const username = req.body.username;
-    //add first to mongodb atlas using User
+  //add first to mongodb atlas using User
   //use async
   if (validator.matches(username,/\w+/)) {
     const id = newID();
     createAndSaveUser({username:username,_id:id},done)
     res.send({ username : `${username}`, _id:`${id}`});
- } else return res.status(400).send('400 Bad Request');
+ } else {
+   res.send('')
+ }
 
 }
 
+//POST api/users/:_id/exercises
+//this function will add new log to db
+//steps:
+//1. check if userid is valid
+//2. check if user exists, findUser
+//3. if exists get all inputs from req.body
+// and check for conformity
+// if pass:
+//4. call createAndSaveLogs with the inputs
+//5. upon save, send an object
 const newLog = async (req,res,next) => {
   const userid = req.params._id;
-  if (!validator.isAlphanumeric(userid)) return res.status(400).send('400 Bad Request');
+  if (!validator.isAlphanumeric(userid)){
+    res.send('')
+  }
+
   findUser(userid)
   .then(user=> {
-    if (user===null) return res.status(400).send('400 Bad Request');
+    if (user===null){
+      res.send('')
+    }
     else {
 
       const desc = req.body.description;
@@ -99,6 +120,15 @@ const newLog = async (req,res,next) => {
 
 }
 
+///GET api/users/:_id/logs?[from=value][to=value][limit=value]
+//brackets([]) means optional
+//this function will display the logs of a particular user using an _id
+//steps:
+//1. determine if the user included the optional
+//2. check if _id is valid and _limit is a number, findUser
+//3. all goes well, check if user (_id) exists
+//4. check if the that particular user have logs, findLogs
+//5. consolidate these logs and send as an object
 const userLogs = async (req,res,next) => {
 
   const userid = req.params._id;
@@ -115,13 +145,13 @@ const userLogs = async (req,res,next) => {
 
   const toSearch = Object.keys(searchDate).length===0?{user:userid}:{user:userid,date:searchDate};
 
-  if (!validator.isAlphanumeric(userid) && isNaN(_limit)) return res.status(400).send('400 Bad Request');
+  if (!validator.isAlphanumeric(userid) && isNaN(_limit)) res.send('');
   else {
       findUser(userid)
       .then(user => {
 
           if (user===null){
-             return res.status(400).send('400 Bad Request');
+            res.send('');
           }
           else {
               let cleanuser = {username: user.username, count: 0, _id:user.id, log: []}
@@ -137,8 +167,7 @@ const userLogs = async (req,res,next) => {
                       });
                       cleanuser['count']=count;
                       cleanuser['log']=cleanlogs;
-                      console.log(cleanuser)
-
+                      console.log(cleanuser);
 
                   }
                   res.send(cleanuser);
